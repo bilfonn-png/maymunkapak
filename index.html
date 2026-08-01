@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaymunKapak — Başlığını yaz, kapağın hazır</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Lilita+One&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="home" href="./" title="Ana sayfa">
+      <span class="logo">
+        <svg viewBox="0 0 64 64" width="34" height="34">
+          <rect x="30" y="34" width="26" height="19" rx="3" fill="#fff" stroke="#5b3b1e" stroke-width="2"/>
+          <circle cx="38" cy="42" r="3" fill="#ffd23f"/>
+          <path d="M33 51l6-6 4 3 5-5 5 5v3H33z" fill="#7ec8e3"/>
+          <ellipse cx="12" cy="24" rx="7" ry="8" fill="#8b5a2b"/><ellipse cx="12" cy="24" rx="3.5" ry="4.5" fill="#e8b98a"/>
+          <ellipse cx="34" cy="24" rx="7" ry="8" fill="#8b5a2b"/><ellipse cx="34" cy="24" rx="3.5" ry="4.5" fill="#e8b98a"/>
+          <ellipse cx="23" cy="26" rx="15" ry="14" fill="#8b5a2b"/>
+          <ellipse cx="23" cy="30" rx="11" ry="10" fill="#e8b98a"/>
+          <circle cx="18" cy="26" r="2.4" fill="#3a2414"/><circle cx="28" cy="26" r="2.4" fill="#3a2414"/>
+          <ellipse cx="20" cy="33" rx="1.6" ry="1.1" fill="#3a2414"/><ellipse cx="26" cy="33" rx="1.6" ry="1.1" fill="#3a2414"/>
+          <path d="M19 36q4 3 8 0" stroke="#3a2414" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <div class="brand"><h1>MaymunKapak</h1><p>başlığını yaz, kapağın hazır 🐵</p></div>
+    </a>
+  </header>
+
+  <div class="tabs">
+    <button class="tab" data-tab="auto">🔗 Kanaldan Otomatik</button>
+    <button class="tab active" data-tab="manual">✏️ Kendi Başlığın</button>
+  </div>
+
+  <!-- ========== KENDİ BAŞLIĞIN ========== -->
+  <div class="wrap" id="panelManual">
+    <h2 class="headline">Başlığını yaz, kapağın anında hazır 🐵</h2>
+    <p class="sub">3 saniyede profesyonel kapak. Tasarım bilmene gerek yok.</p>
+
+    <div class="step">
+      <h2><span class="step-no">1</span> Video başlığını yaz</h2>
+      <input id="title" class="big-input" maxlength="60" placeholder="Örn: 45 KG DAYANIKLILIK TESTİ" value="45 KG DAYANIKLILIK TESTİ" />
+      <input id="subtitle" class="small-input" maxlength="40" placeholder="Alt yazı (opsiyonel) — örn: DAYANDI MI?" value="DAYANDI MI?" />
+      <div class="fmt-row">
+        <button class="fmt-btn active" data-fmt="landscape">🖥 Yatay (video)</button>
+        <button class="fmt-btn" data-fmt="vertical">📱 Dikey (Shorts)</button>
+      </div>
+    </div>
+
+    <div class="step">
+      <h2><span class="step-no">2</span> Fotoğraf ekle <em style="color:var(--muted);font-weight:400;font-size:14px">(opsiyonel)</em></h2>
+      <div class="photo-box" id="photoBox">
+        <input id="photo" type="file" accept="image/*" />
+        <label class="photo-label" for="photo">📷 Kapaklarda kullanmak için foto yükle</label>
+        <p class="hint">Kişi fotosu eklersen maymun arka planı otomatik siler, kişiyi kapağın önüne yerleştirir.</p>
+        <div class="photo-preview" id="photoPreview">
+          <img id="photoThumb" alt="foto" />
+          <button class="photo-clear" id="photoClear" type="button">Kaldır</button>
+        </div>
+        <p class="cut-status" id="cutStatus"></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <h2><span class="step-no">3</span> Beğendiğine tıkla, indir</h2>
+      <div id="covers" class="covers"></div>
+      <p class="hint">Bir kapağın üstüne gel → <b>⬇ İndir</b>. Başlığı değiştir, anında yenilenir.</p>
+    </div>
+  </div>
+
+  <!-- ========== KANALDAN OTOMATİK ========== -->
+  <div class="wrap" id="panelAuto" hidden>
+    <div class="connect-hero" id="connectHero">
+      <div class="big-emoji">🔗🐵</div>
+      <h3>YouTube hesabını bağla</h3>
+      <p>Kanalını bağla → videoların otomatik gelsin → her birine <b>hazır kapak</b> giydirilsin.
+         Tek yaptığın bağlamak; gerisini maymun halleder.</p>
+      <button class="btn-yt" id="connectBtn">🔗 YouTube Hesabını Bağla</button>
+      <p class="hint" id="connectNote"></p>
+    </div>
+    <div id="autoResults" hidden>
+      <p class="sub" id="autoCount" style="margin-top:16px"></p>
+      <div id="autoCovers" class="covers"></div>
+    </div>
+  </div>
+
+  <footer class="foot">MaymunKapak · demo · her şey tarayıcında çalışır</footer>
+  <canvas id="stage"></canvas>
+  <script src="app.js"></script>
+</body>
+</html>
