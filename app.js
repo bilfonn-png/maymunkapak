@@ -201,65 +201,78 @@ $('photo').addEventListener('change',async e=>{
   const f=e.target.files[0];if(!f)return;
   const url=URL.createObjectURL(f);const img=await loadImg(url);
   userImage=img;userCutout=null;
-  $('photoBox').classList.add('has');$('photoPreview').classList.add('show');$('photoThumb').src=url;
-  generate();if(VIDEOS.length)renderAuto();                    // instant: photo as background
-  setCutStatus('✂️ Kişi otomatik kesiliyor… (ilk seferde biraz sürebilir)');
+  $('photoDrop').classList.add('hide');$('photoPreview').classList.add('show');$('photoThumb').src=url;
+  generate();                                                  // instant: photo as background
+  setCutStatus('✂️ Kişi kesiliyor… (ilk seferde ~15 sn)');
   try{
     const cut=await cutoutPerson(f);
-    if(cut&&userImage===img){userCutout=cut;generate();if(VIDEOS.length)renderAuto();
-      setCutStatus('✨ Kişi kesildi, kapakların önüne yerleşti',true);}
-  }catch(err){console.warn('cutout failed',err);setCutStatus('Arka plan silinemedi — foto arka plan olarak kullanıldı');}
+    if(cut&&userImage===img){userCutout=cut;generate();setCutStatus('✨ Arka plan silindi, kapağa yerleşti',true);}
+  }catch(err){console.warn('cutout failed',err);setCutStatus('Foto arka plan olarak kullanıldı');}
 });
-$('photoClear').onclick=()=>{userImage=null;userCutout=null;$('photo').value='';$('photoBox').classList.remove('has');
-  $('photoPreview').classList.remove('show');setCutStatus('');generate();if(VIDEOS.length)renderAuto();};
+$('photoClear').onclick=()=>{userImage=null;userCutout=null;$('photo').value='';
+  $('photoDrop').classList.remove('hide');$('photoPreview').classList.remove('show');setCutStatus('');generate();};
 
-/* ================= KANALDAN OTOMATİK ================= */
-const DEMO_VIDEOS=[
-  {id:'d1',title:'100 GÜN HAYATTA KALDIM',categoryId:'20'},
-  {id:'d2',title:'iPHONE 17 PRO DÜRÜST İNCELEME',categoryId:'28'},
-  {id:'d3',title:'15 DAKİKADA MÜKEMMEL MAKARNA',categoryId:'26'},
-  {id:'d4',title:'BİR AYDA 300.000 TL KAZANDIM',categoryId:'22'},
-  {id:'d5',title:'EKİPMANSIZ TAM VÜCUT ANTRENMANI',categoryId:'17'},
-  {id:'d6',title:'1 SAATTE PYTHON ÖĞREN',categoryId:'27'},
-];
-let CONFIG={hosted:false,connected:false}, VIDEOS=[];
-function connect(){ if(CONFIG.hosted){loadVideos();return;} location.href='/auth/google'; }
-$('connectBtn').onclick=connect;
-async function loadVideos(){
-  $('connectHero').hidden=true;$('autoResults').hidden=false;$('autoCount').textContent='videolar yükleniyor…';
-  let data=null;try{data=await(await fetch('/api/videos')).json();}catch(e){}
-  VIDEOS=(data&&data.videos&&data.videos.length)?data.videos:DEMO_VIDEOS;   // static demo fallback
-  $('autoCount').textContent=`${(data&&data.channelTitle)||'Örnek Kanal'} · ${VIDEOS.length} video · her birine otomatik kapak`;
-  // punchy slogans if a free AI key exists on the server, else use titles
-  try{ if(CONFIG.groqServerKey){ const r=await fetch('/api/slogan-free',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({videos:VIDEOS.map(v=>({id:v.id,title:v.title}))})}); const d=await r.json(); if(d.results)d.results.forEach(x=>{const v=VIDEOS.find(v=>String(v.id)===x.id);if(v){v.slogan=x.slogan;v.topic=x.topic;}}); } }catch(e){}
-  renderAuto();
+/* ================= VIEW ROUTER ================= */
+const VIEWS={home:'viewHome',manual:'viewManual',channel:'viewChannel'};
+function showView(v){for(const k in VIEWS)$(VIEWS[k]).hidden=(k!==v);window.scrollTo(0,0);}
+$('goManual').onclick=()=>{showView('manual');generate();};
+$('goChannel').onclick=()=>showView('channel');
+$('homeLink').addEventListener('click',e=>{e.preventDefault();showView('home');});
+document.querySelectorAll('[data-home]').forEach(b=>b.onclick=()=>showView('home'));
+
+/* ================= YOUTUBE — tarayıcı-içi OAuth (Google Identity Services) ================= */
+const CLIENT_ID='965421817701-u88pi510thkh3le0bqkrjvlqen2tcnbv.apps.googleusercontent.com';
+const YT_SCOPE='https://www.googleapis.com/auth/youtube.force-ssl';
+let ytToken=null, tokenClient=null, VIDEOS=[];
+const ytReady=()=>window.google&&google.accounts&&google.accounts.oauth2;
+function initToken(){ if(tokenClient||!ytReady())return;
+  tokenClient=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:YT_SCOPE,
+    callback:r=>{ $('connectBtn').textContent='🔗 YouTube ile Bağlan';
+      if(r&&r.access_token){ytToken=r.access_token;loadChannel();} }}); }
+$('connectBtn').onclick=()=>{
+  initToken();
+  if(!tokenClient){alert('Google girişi henüz yüklendi—bir saniye sonra tekrar dene.');return;}
+  $('connectBtn').textContent='Google penceresi açılıyor…';
+  tokenClient.requestAccessToken();
+};
+async function ytFetch(u){const r=await fetch(u,{headers:{Authorization:'Bearer '+ytToken}});if(!r.ok)throw new Error('YouTube '+r.status);return r.json();}
+async function loadChannel(){
+  $('connectHero').hidden=true;$('autoResults').hidden=false;$('chanHead').textContent='Kanal ve videolar yükleniyor…';
+  try{
+    const ch=await ytFetch('https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&mine=true');
+    const c=ch.items&&ch.items[0];if(!c)throw new Error('Bu hesapta kanal bulunamadı');
+    const uploads=c.contentDetails.relatedPlaylists.uploads, logo=(c.snippet.thumbnails&&c.snippet.thumbnails.default||{}).url||'';
+    const pl=await ytFetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=12&playlistId='+uploads);
+    VIDEOS=(pl.items||[]).map(it=>({id:it.snippet.resourceId.videoId,title:it.snippet.title}));
+    $('chanHead').innerHTML=(logo?`<img src="${logo}" alt="">`:'')+`<span><b>${c.snippet.title}</b> · ${VIDEOS.length} video · her birine hazır kapak</span>`;
+    renderChannel();
+  }catch(e){console.warn(e);$('chanHead').textContent='Videolar alınamadı: '+e.message;}
 }
-function renderAuto(){
+function renderChannel(){
   const grid=$('autoCovers');grid.innerHTML='';
-  VIDEOS.forEach((v,i)=>{
-    const title=v.slogan||v.title;
-    if(userCutout){
-      const [pi,font,side]=SUBJECT_COMBOS[i%SUBJECT_COMBOS.length];
-      grid.appendChild(coverEl(renderSubject(pi,font,side,'landscape',{title,cut:userCutout}),'landscape'));
-    }else{
-      const cls=v.topic?{label:v.topic,templateId:(LABEL_STYLE[v.topic]||LABEL_STYLE.Video)[0],paletteIdx:(LABEL_STYLE[v.topic]||LABEL_STYLE.Video)[1]}:classify(v);
-      const font=FONT_BY_TYPE[cls.label]||'"Anton", Impact';
-      grid.appendChild(coverEl(render(cls.templateId,cls.paletteIdx,'landscape',{title,font,img:userImage}),'landscape'));
-    }
+  VIDEOS.forEach(v=>{
+    const cls=classify(v),font=FONT_BY_TYPE[cls.label]||'"Anton", Impact';
+    const url=render(cls.templateId,cls.paletteIdx,'landscape',{title:v.title,font});
+    const d=document.createElement('div');d.className='cover landscape';
+    d.innerHTML=`<img src="${url}" alt="kapak"><button class="dl">⬇ İndir</button><button class="up">⬆ Kanalıma Yükle</button>`;
+    d.querySelector('.dl').onclick=e=>{e.stopPropagation();download(url);};
+    d.querySelector('.up').onclick=e=>{e.stopPropagation();uploadThumb(v.id,url,e.currentTarget);};
+    grid.appendChild(d);
   });
+  $('autoHint').innerHTML='Bir kapağın üstüne gel → <b>⬆ Kanalıma Yükle</b> (kanalında özel küçük resim izni açık olmalı) ya da <b>⬇ İndir</b>.';
 }
-
-/* ================= TABS ================= */
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
-  const m=t.dataset.tab;$('panelManual').hidden=m!=='manual';$('panelAuto').hidden=m!=='auto';});
+async function uploadThumb(videoId,dataUrl,btn){
+  if(!ytToken){alert('Önce kanalını bağla.');return;}
+  btn.disabled=true;btn.textContent='Yükleniyor…';
+  try{
+    const blob=await(await fetch(dataUrl)).blob();
+    const r=await fetch('https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId='+videoId+'&uploadType=media',
+      {method:'POST',headers:{Authorization:'Bearer '+ytToken,'Content-Type':'image/png'},body:blob});
+    if(!r.ok)throw new Error((await r.text()).slice(0,140)||('HTTP '+r.status));
+    btn.textContent='✓ Kanala yüklendi';btn.classList.add('done');
+  }catch(e){console.warn(e);btn.disabled=false;btn.textContent='⬆ Tekrar dene';alert('Yüklenemedi: '+e.message);}
+}
 
 /* ================= boot ================= */
-loadFonts().finally(async ()=>{
-  try{CONFIG=await(await fetch('/api/config')).json();}catch(e){CONFIG={hosted:true};}  // no backend = static demo
-  if(CONFIG.hosted){ $('connectBtn').textContent='🎬 Örnek Kapakları Gör';
-    $('connectNote').innerHTML='Demo\'da örnek videolarla gösterilir. Gerçek kanal bağlama tam sürümde.'; }
-  const p=new URLSearchParams(location.search);
-  if(CONFIG.connected||p.get('connected')){ document.querySelector('.tab[data-tab="auto"]').click(); loadVideos(); }
-  generate();
-});
+loadFonts().finally(()=>{ initToken(); generate(); });
+window.addEventListener('load',initToken);

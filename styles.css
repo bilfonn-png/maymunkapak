@@ -15,23 +15,52 @@ body{margin:0;background:var(--bg);color:var(--text);min-height:100vh}
 .brand h1{margin:0;font-size:20px;letter-spacing:.3px}
 .brand p{margin:0;font-size:12px;color:var(--muted)}
 
-/* Tabs */
-.tabs{display:flex;gap:10px;max-width:920px;margin:6px auto 0;padding:0 20px}
-.tab{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--muted);
-  padding:14px;border-radius:14px;cursor:pointer;font-size:16px;font-weight:700;text-align:center}
-.tab.active{color:#fff;background:#182234;border-color:var(--accent2)}
+/* Home: two big choice cards */
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px}
+@media(max-width:640px){.choice{grid-template-columns:1fr}}
+.choice-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:6px;
+  background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:26px 24px;cursor:pointer;
+  color:var(--text);transition:transform .12s,border-color .12s,box-shadow .12s}
+.choice-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.choice-card.yt:hover{border-color:#ff3b5c}
+.choice-card .ci{font-size:46px;line-height:1}
+.choice-card h3{margin:8px 0 0;font-size:22px}
+.choice-card p{margin:0;color:var(--muted);font-size:15px;line-height:1.55}
+.choice-card .cta{margin-top:12px;font-weight:800;color:var(--accent)}
+.choice-card.yt .cta{color:#ff6b81}
 
-/* Photo upload (optional) */
-.photo-box{border:2px dashed var(--line);border-radius:12px;padding:16px;text-align:center;background:#0e131c}
-.photo-box.has{border-style:solid;border-color:var(--good)}
-.photo-box input[type=file]{display:none}
-.photo-label{cursor:pointer;color:var(--accent2);font-weight:700;font-size:15px}
-.photo-preview{display:none;align-items:center;gap:12px;justify-content:center;margin-top:10px}
+/* Back button */
+.back{background:none;border:none;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;padding:4px 0;margin:0 0 6px}
+.back:hover{color:var(--text)}
+.opt{color:var(--muted);font-weight:400;font-size:13px}
+
+/* Prominent photo upload */
+.photo-drop{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;
+  border:2px dashed var(--accent2);border-radius:16px;padding:24px;text-align:center;background:#101a2e}
+.photo-drop:hover{background:#13233d;border-color:var(--accent)}
+.photo-drop .pd-ico{font-size:38px}
+.photo-drop .pd-title{font-size:18px;font-weight:800;color:var(--accent2)}
+.photo-drop .pd-sub{font-size:13px;color:var(--muted)}
+.photo-drop.hide{display:none}
+.photo-preview{display:none;align-items:center;gap:14px;background:#0e1b12;border:1px solid var(--good);border-radius:14px;padding:12px 14px}
 .photo-preview.show{display:flex}
-.photo-preview img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
-.photo-clear{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px}
-.cut-status{margin:10px 0 0;font-size:13px;font-weight:600;color:var(--banana);min-height:18px}
+.photo-preview img{width:70px;height:70px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.pp-txt{display:flex;flex-direction:column;gap:2px;flex:1}
+.pp-txt b{font-size:15px}
+.photo-clear{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px}
+.cut-status{font-size:13px;font-weight:600;color:var(--banana)}
 .cut-status.done{color:var(--good)}
+
+/* Channel head + upload button on covers */
+.chan-head{display:flex;align-items:center;gap:12px;justify-content:center;margin:6px 0 16px;font-size:15px;color:var(--muted);text-align:center}
+.chan-head img{width:38px;height:38px;border-radius:50%;border:1px solid var(--line)}
+.chan-head b{color:var(--text)}
+.cover .up{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:#ff3b5c;color:#fff;border:none;border-radius:10px;padding:10px 16px;
+  font-size:13px;font-weight:800;cursor:pointer;opacity:0;transition:opacity .12s;box-shadow:0 6px 16px rgba(0,0,0,.5);white-space:nowrap}
+.cover:hover .up{opacity:1}
+.cover .up.done{background:var(--good);color:#062012;opacity:1}
+.cover .up:disabled{opacity:.7;cursor:default}
 
 /* Auto (connect) */
 .connect-hero{text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 24px}

@@ -8,10 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Lilita+One&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="home" href="./" title="Ana sayfa">
+    <a class="home" id="homeLink" href="./" title="Ana sayfa">
       <span class="logo">
         <svg viewBox="0 0 64 64" width="34" height="34">
           <rect x="30" y="34" width="26" height="19" rx="3" fill="#fff" stroke="#5b3b1e" stroke-width="2"/>
@@ -30,15 +31,31 @@
     </a>
   </header>
 
-  <div class="tabs">
-    <button class="tab" data-tab="auto">🔗 Kanaldan Otomatik</button>
-    <button class="tab active" data-tab="manual">✏️ Kendi Başlığın</button>
+  <!-- ========== ANA SAYFA: 2 SEÇENEK ========== -->
+  <div class="wrap" id="viewHome">
+    <h2 class="headline">Ne yapmak istiyorsun? 🐵</h2>
+    <p class="sub">İki yol da 3 tıkta profesyonel kapak verir. Tasarım bilmene gerek yok.</p>
+    <div class="choice">
+      <button class="choice-card" id="goManual">
+        <div class="ci">✏️</div>
+        <h3>Kendin Yap</h3>
+        <p>Başlığı yaz, istersen kendi <b>fotoğrafını</b> ekle — anında 6 kapak çıksın, beğendiğini indir.</p>
+        <span class="cta">Başla →</span>
+      </button>
+      <button class="choice-card yt" id="goChannel">
+        <div class="ci">🔗🐵</div>
+        <h3>YouTube Kanalını Bağla</h3>
+        <p>Kanalını bağla → videoların otomatik gelsin → hepsine kapak → tek tıkla <b>kanalına yükle</b>.</p>
+        <span class="cta">Kanalı Bağla →</span>
+      </button>
+    </div>
+    <p class="hint">Hiçbir şey yüklemek zorunda değilsin. İstediğin yolu seç, dilediğinde ana sayfaya dön (yukarıdaki logo).</p>
   </div>
 
-  <!-- ========== KENDİ BAŞLIĞIN ========== -->
-  <div class="wrap" id="panelManual">
-    <h2 class="headline">Başlığını yaz, kapağın anında hazır 🐵</h2>
-    <p class="sub">3 saniyede profesyonel kapak. Tasarım bilmene gerek yok.</p>
+  <!-- ========== KENDİN YAP ========== -->
+  <div class="wrap" id="viewManual" hidden>
+    <button class="back" data-home>← Ana sayfa</button>
+    <h2 class="headline">✏️ Kendin Yap</h2>
 
     <div class="step">
       <h2><span class="step-no">1</span> Video başlığını yaz</h2>
@@ -51,16 +68,17 @@
     </div>
 
     <div class="step">
-      <h2><span class="step-no">2</span> Fotoğraf ekle <em style="color:var(--muted);font-weight:400;font-size:14px">(opsiyonel)</em></h2>
-      <div class="photo-box" id="photoBox">
-        <input id="photo" type="file" accept="image/*" />
-        <label class="photo-label" for="photo">📷 Kapaklarda kullanmak için foto yükle</label>
-        <p class="hint">Kişi fotosu eklersen maymun arka planı otomatik siler, kişiyi kapağın önüne yerleştirir.</p>
-        <div class="photo-preview" id="photoPreview">
-          <img id="photoThumb" alt="foto" />
-          <button class="photo-clear" id="photoClear" type="button">Kaldır</button>
-        </div>
-        <p class="cut-status" id="cutStatus"></p>
+      <h2><span class="step-no">2</span> Fotoğrafını ekle <em class="opt">(opsiyonel ama tavsiye)</em></h2>
+      <input id="photo" type="file" accept="image/*" hidden />
+      <label class="photo-drop" id="photoDrop" for="photo">
+        <span class="pd-ico">📷</span>
+        <span class="pd-title">Fotoğrafını yükle</span>
+        <span class="pd-sub">Maymun arka planı otomatik siler, seni kapağın önüne koyar</span>
+      </label>
+      <div class="photo-preview" id="photoPreview">
+        <img id="photoThumb" alt="foto" />
+        <div class="pp-txt"><b>Fotoğraf eklendi</b><span class="cut-status" id="cutStatus"></span></div>
+        <button class="photo-clear" id="photoClear" type="button">Kaldır</button>
       </div>
     </div>
 
@@ -71,23 +89,27 @@
     </div>
   </div>
 
-  <!-- ========== KANALDAN OTOMATİK ========== -->
-  <div class="wrap" id="panelAuto" hidden>
+  <!-- ========== KANALI BAĞLA ========== -->
+  <div class="wrap" id="viewChannel" hidden>
+    <button class="back" data-home>← Ana sayfa</button>
+
     <div class="connect-hero" id="connectHero">
       <div class="big-emoji">🔗🐵</div>
-      <h3>YouTube hesabını bağla</h3>
-      <p>Kanalını bağla → videoların otomatik gelsin → her birine <b>hazır kapak</b> giydirilsin.
-         Tek yaptığın bağlamak; gerisini maymun halleder.</p>
-      <button class="btn-yt" id="connectBtn">🔗 YouTube Hesabını Bağla</button>
-      <p class="hint" id="connectNote"></p>
+      <h3>YouTube kanalını bağla</h3>
+      <p>Google ile giriş yap, kanalını seç. Videoların otomatik gelir, her birine hazır kapak giydiririz.
+         Beğenirsen tek tıkla kanalına yüklersin.</p>
+      <button class="btn-yt" id="connectBtn">🔗 YouTube ile Bağlan</button>
+      <p class="hint" id="connectNote">Güvenli Google girişi. Sadece kanal videolarını okur ve senin izninle kapak yükler.</p>
     </div>
+
     <div id="autoResults" hidden>
-      <p class="sub" id="autoCount" style="margin-top:16px"></p>
+      <div class="chan-head" id="chanHead"></div>
       <div id="autoCovers" class="covers"></div>
+      <p class="hint" id="autoHint"></p>
     </div>
   </div>
 
-  <footer class="foot">MaymunKapak · demo · her şey tarayıcında çalışır</footer>
+  <footer class="foot">MaymunKapak · her şey tarayıcında çalışır · fotoğrafların hiçbir sunucuya gitmez</footer>
   <canvas id="stage"></canvas>
   <script src="app.js"></script>
 </body>
