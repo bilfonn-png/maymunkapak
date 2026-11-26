@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaymunKapak Pro</title>
+  <link rel="icon" href="icons/icon-48.png" />
+  <link rel="stylesheet" href="fonts.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+</head>
+<body>
+  <div class="wrap shop">
+    <a href="./" class="back">← MaymunKapak</a>
+    <h2 class="headline">🪙 MaymunKapak credits</h2>
+    <p class="sub">Making thumbnails is free. 1 credit = 1 watermark-free download or 1 upload to your YouTube channel. Credits never expire, no subscription.</p>
+    <div class="plans" id="plans"></div>
+    <p class="hint">Secure checkout by Paddle, our reseller and merchant of record. Taxes are added where they apply. Unused credits can be refunded within 14 days, see <a href="terms.html">terms</a>.</p>
+    <p class="hint" id="shopErr"></p>
+  </div>
+  <script src="config.js"></script>
+  <script>
+    const C = MK_CONFIG, plans = document.getElementById('plans');
+    for (const p of C.packs) {
+      const card = document.createElement('div'); card.className = 'plan-card';
+      card.innerHTML = `<h3></h3><p class="price"></p><p class="muted"></p><button class="btn-buy">Buy</button>`;
+      card.querySelector('h3').textContent = `${p.name}: ${p.credits} credits`;
+      card.querySelector('.price').textContent = p.label; card.querySelector('.price').id = 'price-' + p.id;
+      card.querySelector('.muted').textContent = `${p.credits} clean thumbnails`;
+      card.querySelector('button').onclick = () => window.Paddle && Paddle.Checkout.open({ items: [{ priceId: p.priceId, quantity: 1 }] });
+      plans.appendChild(card);
+    }
+    if (!window.Paddle || !C.paddleClientToken) {
+      document.getElementById('shopErr').textContent = 'Checkout is not available right now.';
+    } else {
+      if (C.paddleEnv === 'sandbox') Paddle.Environment.set('sandbox');
+      Paddle.Initialize({
+        token: C.paddleClientToken,
+        eventCallback(ev) {
+          if (ev.name === 'checkout.completed' && ev.data && ev.data.transaction_id)
+            location.href = 'thanks.html?txn=' + encodeURIComponent(ev.data.transaction_id);
+        },
+      });
+      // Local currency prices (Paddle converts for the buyer's country).
+      Paddle.PricePreview({ items: C.packs.map(p => ({ priceId: p.priceId, quantity: 1 })) }).then(r => {
+        for (const li of r.data.details.lineItems) {
+          const p = C.packs.find(x => x.priceId === li.price.id);
+          if (p) document.getElementById('price-' + p.id).textContent = li.formattedTotals.total;
+        }
+      }).catch(() => {});
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thank you · MaymunKapak credits</title>
+  <link rel="icon" href="icons/icon-48.png" />
+  <link rel="stylesheet" href="fonts.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="wrap shop">
+    <h2 class="headline">🎉 Thank you!</h2>
+    <p class="sub" id="status">Getting your license key…</p>
+    <div class="key-box" id="keyBox" hidden>
+      <code id="key"></code>
+      <button class="btn-activate" id="copy" type="button">Copy</button>
+    </div>
+    <ol class="steps" id="steps" hidden>
+      <li><b>Save this key</b> somewhere safe (it is also on this page's link: bookmark it).</li>
+      <li>On this website your credits are ready. For the Chrome extension: open it → <b>🪙 Get credits</b> → paste the key → <b>Add</b>.</li>
+      <li>The same key works on your other browsers and shares one balance.</li>
+    </ol>
+  </div>
+  <script src="config.js"></script>
+  <script>
+    const txn = new URLSearchParams(location.search).get('txn') || '';
+    const $ = id => document.getElementById(id);
+    async function claim(tries) {
+      try {
+        const r = await fetch('/api/claim?txn=' + encodeURIComponent(txn));
+        if (r.ok) {
+          const { key, credits } = await r.json();
+          $('key').textContent = key; $('keyBox').hidden = false; $('steps').hidden = false;
+          $('status').textContent = `Your key for ${credits} credits:`;
+          try {   // add to this browser's wallet right away
+            const w = JSON.parse(localStorage.getItem('mk_wallet') || '{"keys":[]}');
+            if (!w.keys.some(k => k.key === key)) w.keys.push({ key, remaining: credits });
+            localStorage.setItem('mk_wallet', JSON.stringify(w));
+          } catch {}
+          return;
+        }
+      } catch {}
+      if (tries > 0) return setTimeout(() => claim(tries - 1), 3000);   // payment may still be processing
+      $('status').textContent = 'We could not confirm the payment yet. Refresh this page in a minute. If it still fails, reply to your Paddle receipt email.';
+    }
+    if (!/^txn_[a-z0-9]+$/.test(txn)) $('status').textContent = 'This link is missing the purchase id.';
+    else claim(10);
+    $('copy').onclick = () => navigator.clipboard.writeText($('key').textContent).then(() => { $('copy').textContent = 'Copied ✓'; });
+  </script>
+</body>
+</html>
