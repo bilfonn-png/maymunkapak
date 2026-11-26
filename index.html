@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MaymunKapak — Başlığını yaz, kapağın hazır</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Lilita+One&display=swap" rel="stylesheet" />
+  <title>MaymunKapak — YouTube thumbnail maker</title>
+  <meta name="description" content="Type your video title and get 6 ready YouTube thumbnails. Works in your browser, free." />
+  <link rel="icon" href="icons/icon-48.png" />
+  <link rel="stylesheet" href="fonts.css" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://accounts.google.com/gsi/client" async></script>
+  <script src="https://accounts.google.com/gsi/client" async data-web-only></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="home" id="homeLink" href="./" title="Ana sayfa">
+    <a class="home" id="homeLink" href="./" title="Home">
       <span class="logo">
         <svg viewBox="0 0 64 64" width="34" height="34">
           <rect x="30" y="34" width="26" height="19" rx="3" fill="#fff" stroke="#5b3b1e" stroke-width="2"/>
@@ -27,79 +27,86 @@
           <path d="M19 36q4 3 8 0" stroke="#3a2414" stroke-width="1.6" fill="none" stroke-linecap="round"/>
         </svg>
       </span>
-      <div class="brand"><h1>MaymunKapak</h1><p>başlığını yaz, kapağın hazır 🐵</p></div>
+      <div class="brand"><h1>MaymunKapak <span class="plan" id="planBadge"></span></h1><p data-i18n="tagline"></p></div>
     </a>
+    <div class="top-actions">
+      <button class="btn-pro" id="proBtn" type="button" data-i18n="goPro"></button>
+      <select id="langSel" class="lang-sel" aria-label="Language">
+        <option value="en">EN</option>
+        <option value="tr">TR</option>
+      </select>
+    </div>
   </header>
 
-  <!-- ========== ANA SAYFA: 2 SEÇENEK ========== -->
+  <!-- ========== HOME: 2 CHOICES ========== -->
   <div class="wrap" id="viewHome">
-    <h2 class="headline">Ne yapmak istiyorsun? 🐵</h2>
-    <p class="sub">İki yol da 3 tıkta profesyonel kapak verir. Tasarım bilmene gerek yok.</p>
+    <h2 class="headline" data-i18n="homeTitle"></h2>
+    <p class="sub" data-i18n="homeSub"></p>
     <div class="choice">
       <button class="choice-card" id="goManual">
         <div class="ci">✏️</div>
-        <h3>Kendin Yap</h3>
-        <p>Başlığı yaz, istersen kendi <b>fotoğrafını</b> ekle — anında 6 kapak çıksın, beğendiğini indir.</p>
-        <span class="cta">Başla →</span>
+        <h3 data-i18n="manualTitle"></h3>
+        <p data-i18n-html="manualDesc"></p>
+        <span class="cta" data-i18n="start"></span>
       </button>
       <button class="choice-card yt" id="goChannel">
         <div class="ci">🔗🐵</div>
-        <h3>YouTube Kanalını Bağla</h3>
-        <p>Kanalını bağla → videoların otomatik gelsin → hepsine kapak → tek tıkla <b>kanalına yükle</b>.</p>
-        <span class="cta">Kanalı Bağla →</span>
+        <h3><span data-i18n="channelTitle"></span> <span class="pro-tag">PRO</span></h3>
+        <p data-i18n-html="channelDesc"></p>
+        <span class="cta" data-i18n="connectCta"></span>
       </button>
     </div>
-    <p class="hint">Hiçbir şey yüklemek zorunda değilsin. İstediğin yolu seç, dilediğinde ana sayfaya dön (yukarıdaki logo).</p>
+    <p class="hint" data-i18n="homeHint"></p>
+    <p class="hint ext-only" hidden><a href="index.html" target="_blank" id="openFull" data-i18n="openFull"></a></p>
   </div>
 
-  <!-- ========== KENDİN YAP ========== -->
+  <!-- ========== MAKE IT YOURSELF ========== -->
   <div class="wrap" id="viewManual" hidden>
-    <button class="back" data-home>← Ana sayfa</button>
-    <h2 class="headline">✏️ Kendin Yap</h2>
+    <button class="back" data-home data-i18n="back"></button>
+    <h2 class="headline" data-i18n="manualHeadline"></h2>
 
     <div class="step">
-      <h2><span class="step-no">1</span> Video başlığını yaz</h2>
-      <input id="title" class="big-input" maxlength="60" placeholder="Örn: 45 KG DAYANIKLILIK TESTİ" value="45 KG DAYANIKLILIK TESTİ" />
-      <input id="subtitle" class="small-input" maxlength="40" placeholder="Alt yazı (opsiyonel) — örn: DAYANDI MI?" value="DAYANDI MI?" />
+      <h2><span class="step-no">1</span> <span data-i18n="step1"></span></h2>
+      <input id="title" class="big-input" maxlength="60" data-i18n-ph="titlePh" />
+      <input id="subtitle" class="small-input" maxlength="40" data-i18n-ph="subPh" />
       <div class="fmt-row">
-        <button class="fmt-btn active" data-fmt="landscape">🖥 Yatay (video)</button>
-        <button class="fmt-btn" data-fmt="vertical">📱 Dikey (Shorts)</button>
+        <button class="fmt-btn active" data-fmt="landscape" data-i18n="fmtLandscape"></button>
+        <button class="fmt-btn" data-fmt="vertical"><span data-i18n="fmtVertical"></span> <span class="pro-tag">PRO</span></button>
       </div>
     </div>
 
     <div class="step">
-      <h2><span class="step-no">2</span> Fotoğrafını ekle <em class="opt">(opsiyonel ama tavsiye)</em></h2>
+      <h2><span class="step-no">2</span> <span data-i18n="step2"></span>&nbsp;<em class="opt" data-i18n="optional"></em></h2>
       <input id="photo" type="file" accept="image/*" hidden />
       <label class="photo-drop" id="photoDrop" for="photo">
         <span class="pd-ico">📷</span>
-        <span class="pd-title">Fotoğrafını yükle</span>
-        <span class="pd-sub">Maymun arka planı otomatik siler, seni kapağın önüne koyar</span>
+        <span class="pd-title" data-i18n="photoTitle"></span>
+        <span class="pd-sub" id="photoSub" data-i18n="photoSub"></span>
       </label>
       <div class="photo-preview" id="photoPreview">
-        <img id="photoThumb" alt="foto" />
-        <div class="pp-txt"><b>Fotoğraf eklendi</b><span class="cut-status" id="cutStatus"></span></div>
-        <button class="photo-clear" id="photoClear" type="button">Kaldır</button>
+        <img id="photoThumb" alt="" />
+        <div class="pp-txt"><b data-i18n="photoAdded"></b><span class="cut-status" id="cutStatus"></span></div>
+        <button class="photo-clear" id="photoClear" type="button" data-i18n="remove"></button>
       </div>
     </div>
 
     <div class="step">
-      <h2><span class="step-no">3</span> Beğendiğine tıkla, indir</h2>
+      <h2><span class="step-no">3</span> <span data-i18n="step3"></span></h2>
       <div id="covers" class="covers"></div>
-      <p class="hint">Bir kapağın üstüne gel → <b>⬇ İndir</b>. Başlığı değiştir, anında yenilenir.</p>
+      <p class="hint" data-i18n-html="coversHint"></p>
     </div>
   </div>
 
-  <!-- ========== KANALI BAĞLA ========== -->
+  <!-- ========== CONNECT CHANNEL ========== -->
   <div class="wrap" id="viewChannel" hidden>
-    <button class="back" data-home>← Ana sayfa</button>
+    <button class="back" data-home data-i18n="back"></button>
 
     <div class="connect-hero" id="connectHero">
       <div class="big-emoji">🔗🐵</div>
-      <h3>YouTube kanalını bağla</h3>
-      <p>Google ile giriş yap, kanalını seç. Videoların otomatik gelir, her birine hazır kapak giydiririz.
-         Beğenirsen tek tıkla kanalına yüklersin.</p>
-      <button class="btn-yt" id="connectBtn">🔗 YouTube ile Bağlan</button>
-      <p class="hint" id="connectNote">Güvenli Google girişi. Sadece kanal videolarını okur ve senin izninle kapak yükler.</p>
+      <h3 data-i18n="connectHeadline"></h3>
+      <p data-i18n="connectBody"></p>
+      <button class="btn-yt" id="connectBtn" data-i18n="connectBtn"></button>
+      <p class="hint" id="connectNote" data-i18n="connectNote"></p>
     </div>
 
     <div id="autoResults" hidden>
@@ -109,8 +116,31 @@
     </div>
   </div>
 
-  <footer class="foot">MaymunKapak · her şey tarayıcında çalışır · fotoğrafların hiçbir sunucuya gitmez</footer>
+  <!-- ========== PRO DIALOG ========== -->
+  <dialog id="proDlg" class="pro-dlg">
+    <form method="dialog" class="pro-box">
+      <p class="pro-locked" id="proLocked" data-i18n="proLocked" hidden></p>
+      <h3>⭐ <span data-i18n="proTitle"></span></h3>
+      <p data-i18n="proBody"></p>
+      <div id="proBuyRow"><a class="btn-buy" id="proBuy" target="_blank" rel="noopener" data-i18n="proBuy"></a></div>
+      <div id="proKeyArea">
+        <label for="proKey" data-i18n="proHaveKey"></label>
+        <div class="key-row">
+          <input id="proKey" class="small-input" autocomplete="off" spellcheck="false" data-i18n-ph="proKeyPh" />
+          <button type="button" class="btn-activate" id="proActivate" data-i18n="proActivate"></button>
+        </div>
+      </div>
+      <p class="pro-msg" id="proMsg"></p>
+      <button type="button" class="link-btn" id="proDeactivate" data-i18n="proDeactivate" hidden></button>
+      <button class="link-btn" value="close" data-i18n="close"></button>
+    </form>
+  </dialog>
+
+  <footer class="foot" data-i18n="footer"></footer>
   <canvas id="stage"></canvas>
+  <script src="config.js"></script>
+  <script src="i18n.js"></script>
+  <script src="license.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
