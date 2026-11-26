@@ -20,7 +20,13 @@ html = html.replace(/\s*<script[^>]*data-web-only[^>]*><\/script>/g, '');
 if (/<script[^>]+src="https?:/i.test(html)) throw new Error('index.html still references a remote script');
 writeFileSync(join(out, 'index.html'), html);
 
-const { version } = JSON.parse(readFileSync(join(out, 'manifest.json'), 'utf8'));
+// Let the extension call our license API (siteUrl in config.js).
+const manifest = JSON.parse(readFileSync(join(out, 'manifest.json'), 'utf8'));
+const site = /siteUrl:\s*'([^']+)'/.exec(readFileSync(join(root, 'config.js'), 'utf8'));
+if (!site) throw new Error('siteUrl not found in config.js');
+manifest.host_permissions.push(new URL(site[1]).origin + '/*');
+writeFileSync(join(out, 'manifest.json'), JSON.stringify(manifest, null, 2));
+const { version } = manifest;
 const zip = join(root, 'dist', `maymunkapak-extension-${version}.zip`);
 if (existsSync(zip)) rmSync(zip);
 execFileSync('zip', ['-qr', zip, '.'], { cwd: out });

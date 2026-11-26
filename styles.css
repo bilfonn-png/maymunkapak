@@ -149,3 +149,17 @@ body.is-pro .pro-tag{display:none}
   .cover .dl{opacity:1;left:auto;right:8px;top:8px;bottom:auto;transform:none;padding:6px 10px;font-size:12px}
   .cover .up{opacity:1;left:8px;top:8px;transform:none;padding:6px 10px;font-size:12px}
 }
+
+/* Shop pages (buy.html, thanks.html) */
+.shop .back{display:inline-block;text-decoration:none;margin-top:16px}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:620px;margin:0 auto}
+@media(max-width:560px){.plans{grid-template-columns:1fr}}
+.plan-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:8px}
+.plan-card[hidden]{display:none}
+.plan-card h3{margin:0}.plan-card .price{font-size:30px;font-weight:800;margin:0}.muted{color:var(--muted);margin:0 0 6px}
+.plan-card .btn-buy{border:none;cursor:pointer;font-size:16px}
+.shop .hint a{color:var(--accent2)}
+.key-box{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--good);border-radius:14px;padding:16px;max-width:620px;margin:0 auto}
+.key-box code{font-size:15px;word-break:break-all;color:var(--banana)}
+.key-box .btn-activate{padding:10px 16px}
+.steps{max-width:560px;margin:22px auto;color:var(--muted);line-height:1.7}.steps a{color:var(--accent2)}

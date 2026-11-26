@@ -1,15 +1,16 @@
 /* MaymunKapak — settings you fill in once. Nothing here is secret: it all ships to the browser. */
 const MK_CONFIG = {
-  // Checkout page for Pro (your Gumroad product link). Leave '' to hide the Buy button.
-  buyUrl: '',
+  // Your Vercel deployment of this repo (serves buy.html, thanks.html and /api/*). No trailing slash.
+  siteUrl: 'https://maymunkapak.vercel.app',
 
-  // Where license keys come from: 'gumroad' (default) or 'lemonsqueezy' (legacy only:
-  // Lemon Squeezy takes no new sign-ups and shuts down on 31 March 2027).
-  licenseProvider: 'gumroad',
-  // Gumroad: the product id shown on the product's edit page (required).
-  gumroadProductId: '',
-  // Lemon Squeezy (legacy): product id (number), or null to accept any key from the store.
-  lemonProductId: null,
+  // Paddle (merchant of record). Paddle → Developer tools → Authentication → Client-side token.
+  paddleEnv: 'sandbox',            // 'sandbox' while testing, 'production' for real sales
+  paddleClientToken: '',           // test_... or live_...
+  paddlePrices: {                  // Paddle → Catalog → Products → Pro → Prices
+    lifetime: '',                  // e.g. pri_01... one-time $29
+    monthly: '',                   // e.g. pri_01... $5 / month (leave '' to hide)
+  },
+
   // Re-check the key this often; if the server can't be reached, Pro keeps working.
   revalidateDays: 3,
 
@@ -20,3 +21,4 @@ const MK_CONFIG = {
   // Text drawn on free-plan thumbnails.
   watermark: 'MaymunKapak',
 };
+MK_CONFIG.buyUrl = MK_CONFIG.paddleClientToken ? MK_CONFIG.siteUrl + '/buy.html' : '';

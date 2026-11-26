@@ -1,0 +1,9 @@
+{
+  "name": "maymunkapak",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:extension": "node scripts/build-extension.mjs",
+    "test": "node --test test/*.test.js"
+  }
+}
