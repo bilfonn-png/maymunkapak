@@ -9,9 +9,11 @@ const ctx = canvas.getContext('2d');
 const $ = id => document.getElementById(id);
 const IS_EXT = !!(window.chrome && chrome.runtime && chrome.runtime.id);
 
-/* Free plan: small watermark on every thumbnail. Pro: clean. */
+/* Previews and free downloads carry a small watermark. A clean copy is rendered only when a credit is spent. */
+let CLEAN=false;
+function renderClean(fn){CLEAN=true;try{return fn();}finally{CLEAN=false;}}
 function stamp(c,W,H){
-  if(isPro()||!MK_CONFIG.watermark)return;
+  if(CLEAN||!MK_CONFIG.watermark)return;
   const fs=Math.round(Math.min(W,H)*.032),txt='🐵 '+MK_CONFIG.watermark;
   c.save();c.font=`700 ${fs}px Arial`;c.textAlign='right';c.textBaseline='bottom';
   const tw=c.measureText(txt).width,pad=fs*.45,x=W-fs*.6,y=H-fs*.6;
@@ -133,10 +135,29 @@ function classify(v){
   const byCat={'20':['Oyun','beast',1],'28':['Teknoloji','boldLeft',3],'26':['Nasıl Yapılır','centerStack',2],'27':['Eğitim','centerStack',6],'10':['Müzik','megaText',6],'17':['Fitness','beast',7],'22':['Vlog','bottomBar',0]};
   return byCat[v.categoryId]?pick(...byCat[v.categoryId]):pick('Video','boldLeft',0);
 }
-function download(url){const a=document.createElement('a');a.href=url;a.download=`maymunkapak_${Date.now()}.png`;a.click();}
-function coverEl(url,cls){const d=document.createElement('div');d.className='cover '+cls;
+function saveFile(url){const a=document.createElement('a');a.href=url;a.download=`maymunkapak_${Date.now()}.png`;a.click();}
+/* With credits: spend 1 and save a clean copy. Without: save the watermarked preview and offer credits. */
+let busy=false;
+async function download(previewUrl,renderFn){
+  if(busy)return;
+  if(!isPro()){saveFile(previewUrl);toast(t('freeSaved'),true);return;}
+  busy=true;
+  try{
+    const r=await spendCredit();
+    if(r.ok){saveFile(renderClean(renderFn));refreshPlan();toast(t('cleanSaved',credits()));}
+    else if(r.reason==='network'){alert(t('proNetErr'));}
+    else{refreshPlan();saveFile(previewUrl);toast(t('freeSaved'),true);}
+  }finally{busy=false;}
+}
+function coverEl(renderFn,cls){const url=renderFn();const d=document.createElement('div');d.className='cover '+cls;
   d.innerHTML=`<img src="${url}" alt=""><button class="dl">${t('download')}</button>`;
-  d.querySelector('.dl').onclick=e=>{e.stopPropagation();download(url);};d.onclick=()=>download(url);return d;}
+  d.querySelector('.dl').onclick=e=>{e.stopPropagation();download(url,renderFn);};d.onclick=()=>download(url,renderFn);return d;}
+function toast(msg,withBuy){
+  let el=$('toast');if(!el){el=document.createElement('div');el.id='toast';el.className='toast';document.body.appendChild(el);}
+  el.innerHTML='';const s=document.createElement('span');s.textContent=msg;el.appendChild(s);
+  if(withBuy){const b=document.createElement('button');b.textContent=t('getCredits');b.onclick=()=>openPro(false);el.appendChild(b);}
+  el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),5000);
+}
 
 /* ---------- AI person cutout (fully client-side, works on Vercel too) ---------- */
 function hexA(h,a){const n=parseInt(h.slice(1),16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
@@ -201,16 +222,17 @@ let FMT='landscape', userImage=null, userCutout=null;
 function generate(){
   const title=$('title').value.trim()||t('defaultTitle'), sub=$('subtitle').value.trim(), grid=$('covers');grid.innerHTML='';
   if(userCutout){
-    SUBJECT_COMBOS.forEach(([pi,font,side])=>grid.appendChild(coverEl(renderSubject(pi,font,side,FMT,{title,subtitle:sub,cut:userCutout}),FMT)));
+    const cut=userCutout,fmt=FMT;
+    SUBJECT_COMBOS.forEach(([pi,font,side])=>grid.appendChild(coverEl(()=>renderSubject(pi,font,side,fmt,{title,subtitle:sub,cut}),fmt)));
   }else{
-    COMBOS.forEach(([tpl,pi,font])=>grid.appendChild(coverEl(render(tpl,pi,FMT,{title,subtitle:sub,font,img:userImage}),FMT)));
+    const img=userImage,fmt=FMT;
+    COMBOS.forEach(([tpl,pi,font])=>grid.appendChild(coverEl(()=>render(tpl,pi,fmt,{title,subtitle:sub,font,img}),fmt)));
   }
 }
 let timer;const scheduleGen=()=>{clearTimeout(timer);timer=setTimeout(generate,250);};
 $('title').addEventListener('input',scheduleGen);
 $('subtitle').addEventListener('input',scheduleGen);
 document.querySelectorAll('.fmt-btn').forEach(b=>b.onclick=()=>{
-  if(b.dataset.fmt==='vertical'&&!isPro()){openPro(true);return;}
   document.querySelectorAll('.fmt-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');FMT=b.dataset.fmt;generate();});
 $('photo').addEventListener('change',async e=>{
   const f=e.target.files[0];if(!f)return;
@@ -232,7 +254,7 @@ $('photoClear').onclick=()=>{userImage=null;userCutout=null;$('photo').value='';
 const VIEWS={home:'viewHome',manual:'viewManual',channel:'viewChannel'};
 function showView(v){for(const k in VIEWS)$(VIEWS[k]).hidden=(k!==v);window.scrollTo(0,0);}
 $('goManual').onclick=()=>{showView('manual');generate();};
-$('goChannel').onclick=()=>{if(!isPro()){openPro(true);return;}showView('channel');};
+$('goChannel').onclick=()=>showView('channel');
 $('homeLink').addEventListener('click',e=>{e.preventDefault();showView('home');});
 document.querySelectorAll('[data-home]').forEach(b=>b.onclick=()=>showView('home'));
 
@@ -255,7 +277,6 @@ async function extAuth(){
   if(!tok)throw new Error('no token');return tok;
 }
 $('connectBtn').onclick=async()=>{
-  if(!isPro()){openPro(true);return;}
   if(IS_EXT){
     $('connectBtn').textContent=t('googleOpening');
     try{ytToken=await extAuth();loadChannel();}catch(e){console.warn(e);}
@@ -286,19 +307,23 @@ function renderChannel(){
   const grid=$('autoCovers');grid.innerHTML='';
   VIDEOS.forEach(v=>{
     const cls=classify(v),font=FONT_BY_TYPE[cls.label]||'"Anton", Impact';
-    const url=render(cls.templateId,cls.paletteIdx,'landscape',{title:v.title,font});
+    const renderFn=()=>render(cls.templateId,cls.paletteIdx,'landscape',{title:v.title,font}),url=renderFn();
     const d=document.createElement('div');d.className='cover landscape';
     d.innerHTML=`<img src="${url}" alt=""><button class="dl">${t('download')}</button><button class="up">${t('uploadToChannel')}</button>`;
-    d.querySelector('.dl').onclick=e=>{e.stopPropagation();download(url);};
-    d.querySelector('.up').onclick=e=>{e.stopPropagation();uploadThumb(v.id,url,e.currentTarget);};
+    d.querySelector('.dl').onclick=e=>{e.stopPropagation();download(url,renderFn);};
+    d.querySelector('.up').onclick=e=>{e.stopPropagation();uploadThumb(v.id,renderFn,e.currentTarget);};
     grid.appendChild(d);
   });
   $('autoHint').innerHTML=t('autoHint');
 }
-async function uploadThumb(videoId,dataUrl,btn){
+/* Uploading to the channel spends 1 credit and always sends the clean version. */
+async function uploadThumb(videoId,renderFn,btn){
   if(!ytToken){alert(t('connectFirst'));return;}
   if(!isPro()){openPro(true);return;}
   btn.disabled=true;btn.textContent=t('uploading');
+  const spent=await spendCredit();refreshPlan();
+  if(!spent.ok){btn.disabled=false;btn.textContent=t('uploadToChannel');if(spent.reason==='network')alert(t('proNetErr'));else openPro(true);return;}
+  const dataUrl=renderClean(renderFn);
   try{
     const blob=await(await fetch(dataUrl)).blob();
     const r=await fetch('https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId='+videoId+'&uploadType=media',
@@ -308,30 +333,29 @@ async function uploadThumb(videoId,dataUrl,btn){
   }catch(e){console.warn(e);btn.disabled=false;btn.textContent=t('retry');alert(t('uploadFail')+e.message);}
 }
 
-/* ================= PRO ================= */
+/* ================= CREDITS ================= */
 function refreshPlan(){
-  const pro=isPro();document.body.classList.toggle('is-pro',pro);
-  $('planBadge').textContent=pro?t('proBadge'):t('freeBadge');$('planBadge').classList.toggle('pro',pro);
-  $('proBtn').textContent=pro?'✓ '+t('proBadge'):t('goPro');$('proBtn').classList.toggle('is-pro',pro);
-  $('proKeyArea').hidden=pro;$('proBuyRow').hidden=pro||!MK_CONFIG.buyUrl;$('proDeactivate').hidden=!pro;
-  if(pro){$('proMsg').textContent=t('proActive');$('proMsg').className='pro-msg ok';}
-  if(!pro&&FMT==='vertical'){FMT='landscape';document.querySelectorAll('.fmt-btn').forEach(x=>x.classList.toggle('active',x.dataset.fmt==='landscape'));}
+  const n=credits(),pro=n>0;document.body.classList.toggle('is-pro',pro);
+  $('planBadge').textContent=pro?t('creditsShort',n):t('freeBadge');$('planBadge').classList.toggle('pro',pro);
+  $('proBtn').textContent=pro?t('creditsBtn',n):t('getCredits');$('proBtn').classList.toggle('is-pro',pro);
+  $('proBuyRow').hidden=!MK_CONFIG.buyUrl;$('proDeactivate').hidden=!readWallet().keys.length;
+  $('proBalance').textContent=pro?t('balance',n):'';
 }
 function openPro(locked){
-  $('proLocked').hidden=!locked||isPro();
-  if(!isPro()){$('proMsg').textContent='';$('proMsg').className='pro-msg';}
+  $('proLocked').hidden=!locked;
+  $('proMsg').textContent='';$('proMsg').className='pro-msg';
   if(MK_CONFIG.buyUrl)$('proBuy').href=MK_CONFIG.buyUrl;
-  $('proDlg').showModal();
+  refreshPlan();$('proDlg').showModal();
 }
 $('proBtn').onclick=()=>openPro(false);
 $('proActivate').onclick=async()=>{
   const b=$('proActivate'),m=$('proMsg');b.disabled=true;b.textContent=t('proChecking');m.textContent='';m.className='pro-msg';
-  const r=await activateLicense($('proKey').value);
+  const r=await addKey($('proKey').value);
   b.disabled=false;b.textContent=t('proActivate');
-  if(r.ok){$('proKey').value='';$('proLocked').hidden=true;refreshPlan();regenerateAll();}
-  else{m.textContent=t(r.reason==='network'?'proNetErr':'proInvalid');m.className='pro-msg err';}
+  if(r.ok){$('proKey').value='';$('proLocked').hidden=true;refreshPlan();m.textContent=t('keyAdded',r.added,credits());m.className='pro-msg ok';}
+  else{m.textContent=t({network:'proNetErr',duplicate:'keyDuplicate'}[r.reason]||'proInvalid');m.className='pro-msg err';}
 };
-$('proDeactivate').onclick=async()=>{await deactivateLicense();$('proMsg').textContent='';refreshPlan();regenerateAll();};
+$('proDeactivate').onclick=()=>{clearWallet();$('proMsg').textContent='';refreshPlan();};
 
 /* ================= LANGUAGE ================= */
 function regenerateAll(){ if(!$('viewManual').hidden||!$('covers').children.length)generate(); renderChannel(); }
@@ -349,4 +373,4 @@ if(IS_EXT){ document.querySelectorAll('.ext-only').forEach(e=>e.hidden=new URLSe
 applyI18n();afterI18n();fillDefaults();refreshPlan();
 loadFonts().finally(()=>{ if(!IS_EXT)initToken(); generate(); });
 if(!IS_EXT)window.addEventListener('load',initToken);
-revalidateLicense(false).then(()=>{refreshPlan();});
+refreshCredits().then(refreshPlan);

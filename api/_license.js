@@ -1,9 +1,9 @@
-// Stateless license keys for Paddle sales: key = MK1-<transaction id>-<HMAC>.
-// No database: the key proves which Paddle transaction it came from, and Paddle says whether that sale is still valid.
+// Credit keys for Paddle purchases: key = MK1-<transaction id>-<HMAC>.
+// The key proves which Paddle transaction it came from; Paddle says how many credits that purchase bought
+// (from the price's "credits=N" description or custom_data.credits) and whether it was refunded.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const PADDLE_API = () => (process.env.PADDLE_ENV === 'sandbox' ? 'https://sandbox-api.paddle.com' : 'https://api.paddle.com');
-const PRICE_IDS = () => (process.env.PADDLE_PRICE_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
 
 function sign(txnId) {
   const secret = process.env.LICENSE_SECRET;
@@ -25,19 +25,24 @@ async function paddle(path) {
   return (await r.json()).data;
 }
 
-/* 'valid' | 'invalid' — throws on Paddle/network trouble so callers can answer 502 (the extension then keeps Pro). */
-export async function checkTransaction(txnId) {
+export function creditsOfPrice(price) {
+  if (!price) return 0;
+  if (process.env.PADDLE_PRODUCT_ID && price.product_id !== process.env.PADDLE_PRODUCT_ID) return 0;
+  const fromData = price.custom_data && Number(price.custom_data.credits);
+  if (fromData > 0) return Math.floor(fromData);
+  const m = /credits\s*=\s*(\d+)/i.exec(price.description || '');
+  return m ? Number(m[1]) : 0;
+}
+
+/* → number of credits this purchase is worth (0 = not paid, refunded or not ours). Throws when Paddle can't be reached. */
+export async function creditsForTransaction(txnId) {
   const txn = await paddle('/transactions/' + encodeURIComponent(txnId));
-  if (!txn || !['completed', 'paid'].includes(txn.status)) return 'invalid';
-  const prices = PRICE_IDS();
-  if (prices.length && !(txn.items || []).some(i => prices.includes(i.price && i.price.id))) return 'invalid';
+  if (!txn || !['completed', 'paid'].includes(txn.status)) return 0;
+  const credits = (txn.items || []).reduce((n, i) => n + (i.quantity || 1) * creditsOfPrice(i.price), 0);
+  if (!credits) return 0;
   const refunds = await paddle('/adjustments?action=refund&transaction_id=' + encodeURIComponent(txnId));
-  if ((refunds || []).some(a => a.status === 'approved')) return 'invalid';
-  if (txn.subscription_id) {
-    const sub = await paddle('/subscriptions/' + encodeURIComponent(txn.subscription_id));
-    if (!sub || !['active', 'trialing', 'past_due'].includes(sub.status)) return 'invalid';
-  }
-  return 'valid';
+  if ((refunds || []).some(a => a.status === 'approved')) return 0;
+  return credits;
 }
 
 export function cors(res) {
@@ -45,4 +50,7 @@ export function cors(res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Cache-Control', 'no-store');
+}
+export function formBody(req) {
+  return typeof req.body === 'string' ? Object.fromEntries(new URLSearchParams(req.body)) : (req.body || {});
 }

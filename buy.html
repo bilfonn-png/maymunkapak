@@ -12,29 +12,26 @@
 <body>
   <div class="wrap shop">
     <a href="./" class="back">← MaymunKapak</a>
-    <h2 class="headline">⭐ MaymunKapak Pro</h2>
-    <p class="sub">No watermark · Shorts (vertical) thumbnails · YouTube channel mode with one-click upload · all future templates</p>
-    <div class="plans">
-      <div class="plan-card" id="cardLifetime">
-        <h3>Lifetime</h3><p class="price" id="priceLifetime">$29</p><p class="muted">Pay once, yours forever.</p>
-        <button class="btn-buy" data-plan="lifetime">Buy lifetime</button>
-      </div>
-      <div class="plan-card" id="cardMonthly">
-        <h3>Monthly</h3><p class="price" id="priceMonthly">$5 / month</p><p class="muted">Cancel any time.</p>
-        <button class="btn-buy" data-plan="monthly">Subscribe</button>
-      </div>
-    </div>
-    <p class="hint">Secure checkout by Paddle, our reseller and merchant of record. Taxes are added where they apply. 14-day refund, see <a href="terms.html">terms</a>.</p>
+    <h2 class="headline">🪙 MaymunKapak credits</h2>
+    <p class="sub">Making thumbnails is free. 1 credit = 1 watermark-free download or 1 upload to your YouTube channel. Credits never expire, no subscription.</p>
+    <div class="plans" id="plans"></div>
+    <p class="hint">Secure checkout by Paddle, our reseller and merchant of record. Taxes are added where they apply. Unused credits can be refunded within 14 days, see <a href="terms.html">terms</a>.</p>
     <p class="hint" id="shopErr"></p>
   </div>
   <script src="config.js"></script>
   <script>
-    const C = MK_CONFIG;
-    const show = (id, on) => { document.getElementById(id).hidden = !on; };
-    show('cardLifetime', !!C.paddlePrices.lifetime);
-    show('cardMonthly', !!C.paddlePrices.monthly);
+    const C = MK_CONFIG, plans = document.getElementById('plans');
+    for (const p of C.packs) {
+      const card = document.createElement('div'); card.className = 'plan-card';
+      card.innerHTML = `<h3></h3><p class="price"></p><p class="muted"></p><button class="btn-buy">Buy</button>`;
+      card.querySelector('h3').textContent = `${p.name}: ${p.credits} credits`;
+      card.querySelector('.price').textContent = p.label; card.querySelector('.price').id = 'price-' + p.id;
+      card.querySelector('.muted').textContent = `${p.credits} clean thumbnails`;
+      card.querySelector('button').onclick = () => window.Paddle && Paddle.Checkout.open({ items: [{ priceId: p.priceId, quantity: 1 }] });
+      plans.appendChild(card);
+    }
     if (!window.Paddle || !C.paddleClientToken) {
-      document.getElementById('shopErr').textContent = 'Checkout is not set up yet.';
+      document.getElementById('shopErr').textContent = 'Checkout is not available right now.';
     } else {
       if (C.paddleEnv === 'sandbox') Paddle.Environment.set('sandbox');
       Paddle.Initialize({
@@ -44,16 +41,13 @@
             location.href = 'thanks.html?txn=' + encodeURIComponent(ev.data.transaction_id);
         },
       });
-      // Show localized prices (Paddle converts to the buyer's currency).
-      const items = Object.entries(C.paddlePrices).filter(([, id]) => id).map(([, id]) => ({ priceId: id, quantity: 1 }));
-      Paddle.PricePreview({ items }).then(r => {
+      // Local currency prices (Paddle converts for the buyer's country).
+      Paddle.PricePreview({ items: C.packs.map(p => ({ priceId: p.priceId, quantity: 1 })) }).then(r => {
         for (const li of r.data.details.lineItems) {
-          const plan = li.price.id === C.paddlePrices.lifetime ? 'Lifetime' : 'Monthly';
-          document.getElementById('price' + plan).textContent = li.formattedTotals.total + (plan === 'Monthly' ? ' / month' : '');
+          const p = C.packs.find(x => x.priceId === li.price.id);
+          if (p) document.getElementById('price-' + p.id).textContent = li.formattedTotals.total;
         }
       }).catch(() => {});
-      document.querySelectorAll('[data-plan]').forEach(b => b.onclick = () =>
-        Paddle.Checkout.open({ items: [{ priceId: C.paddlePrices[b.dataset.plan], quantity: 1 }] }));
     }
   </script>
 </body>
