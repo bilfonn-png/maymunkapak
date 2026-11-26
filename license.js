@@ -1,4 +1,4 @@
-/* MaymunKapak — Pro license check (Lemon Squeezy or Gumroad license keys).
+/* MaymunKapak — Pro license check (Gumroad license keys; Lemon Squeezy kept for legacy stores).
  * Runs fully in the browser; the key and its instance id are kept in localStorage. */
 const LICENSE_KEY = 'mk_license';
 const DAY = 864e5;

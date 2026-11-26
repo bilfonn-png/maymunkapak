@@ -5,7 +5,7 @@ Type a title, get 6 ready YouTube thumbnails. Runs fully in the browser, as a we
 - English by default, Turkish for Turkish browsers, language switch in the top bar (`i18n.js`)
 - **Free:** landscape thumbnails with a small watermark
 - **Pro:** no watermark, Shorts (vertical) sizes, YouTube channel mode with one-click thumbnail upload
-- Pro is unlocked with a **Lemon Squeezy** or **Gumroad** license key (`license.js`), and settings live in `config.js`
+- Pro is unlocked with a **Gumroad** license key (`license.js`), and settings live in `config.js`. Lemon Squeezy code is kept only for existing stores: it takes no new sign-ups and shuts down on 31 March 2027.
 
 ## Files
 
@@ -33,8 +33,8 @@ Differences in the extension: the person cut-out (background removal) loads a re
 
 ## Yayına alma adımları (Türkçe)
 
-1. **Ödeme hesabı:** Lemon Squeezy'de (veya Gumroad'da) mağaza aç. Türkiye'den satıcı kabulünü ve ödeme yöntemini başvuruda teyit et. Bir ürün oluştur, **License keys** seçeneğini aç (cihaz limiti: 3 önerilir). Öneri: ömür boyu 29 $, ayrıca aylık 5 $.
-2. **`config.js`'i doldur:** `buyUrl` (ürünün ödeme linki), `lemonProductId` (ürün numarası). Gumroad kullanırsan `licenseProvider: 'gumroad'` ve `gumroadProductId`.
+1. **Ödeme hesabı:** Gumroad'da hesap aç (Lemon Squeezy yeni kayıt almıyor ve 31 Mart 2027'de kapanıyor). Gumroad satışlarda KDV'yi merchant of record olarak kendisi tahsil eder. Ödeme ayarlarında Türkiye'ye hangi yöntemle (banka hesabı vb.) ödeme alabildiğini kontrol et. Ürün oluştur, **Generate a unique license key per sale** seçeneğini aç. Öneri: ömür boyu 29 $, ayrıca aylık 5 $ üyelik.
+2. **`config.js`'i doldur:** `buyUrl` (ürünün Gumroad linki) ve `gumroadProductId` (ürün düzenleme sayfasındaki product ID).
 3. **Google OAuth (kanal modu için):** Google Cloud Console → OAuth istemcisi (Web application). Web sitesinin adresini *Authorized JavaScript origins*'e, eklenti için `https://<eklenti-id>.chromiumapp.org/` adresini *Authorized redirect URIs*'e ekle. Eklenti kimliği Chrome Web Store'a ilk yüklemeden sonra sabitlenir. `youtube.force-ssl` hassas bir izin olduğu için Google doğrulaması gerekir; doğrulama bitene kadar kanal modu yalnızca test kullanıcılarına açık kalır. Kendin Yap modu bundan etkilenmez.
 4. **Paketle:** `node scripts/build-extension.mjs`.
 5. **Chrome Web Store:** Geliştirici hesabı aç (tek seferlik 5 $). Zip'i yükle, gizlilik politikası olarak `privacy.html`'in yayındaki adresini ver, en az 1 ekran görüntüsü (1280×800) ve kısa tanıtım ekle. Kategori: *Tools* veya *Photos*.
